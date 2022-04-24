@@ -10,6 +10,7 @@ from QueenEnvironment import nCk
 import QueenEnvironment
 import queue
 from QueenEnvironment import graph
+from timeit import default_timer
 
 
 def convert_state_to_string(my_state):
@@ -89,7 +90,9 @@ class AStar:
         (value, best_state) = self.states.get()
         start = time.process_time()
         count = 1
+        tiempoDeEjecucion = []
         while not self.is_goal(best_state):
+            inicio = default_timer()
             neighbor_states = self.action(best_state)
             self.push_to_queue(neighbor_states)
             if not self.states.empty():
@@ -102,10 +105,20 @@ class AStar:
                 count += 1
             else:
                 return None
+            final = default_timer()
+            tiempo = (final - inicio) * 1000
+            tiempoDeEjecucion.append(tiempo)
+
+        axisX = list(range(len(tiempoDeEjecucion)))
+        axisY = tiempoDeEjecucion
+        titleAxisX = "Iteraciones"
+        titleAxisY = "Tiempo de Ejecución (ms)"
+        title = "A*"
+        numberIterations = str(len(tiempoDeEjecucion))
 
         duration = time.process_time() - start
         print(duration)
-        return best_state
+        return [best_state, axisX, axisY, titleAxisX, titleAxisY, title, numberIterations]
 
 
 def get_neighbor_highest(states):
@@ -315,8 +328,9 @@ def print_board(state):
 
 
 def main():
+    bfs = False
     env = QueenEnvironment.QueenEnvironment()
-
+    solution = []
     env.current_state = env.random_start_state()
     env.current_state.show()
 
@@ -332,19 +346,12 @@ def main():
     if choose == 1:
         n_queens = NQueens(size)
         bfs_solutions = n_queens.solve_bfs()
-        for i, solution in enumerate(bfs_solutions[0]):
+        solution = bfs_solutions
+        for i, solu in enumerate(bfs_solutions[0]):
             print('BFS Solution %d:' % (i + 1))
-            n_queens.print(solution)
+            n_queens.print(solu)
         print('Total BFS solutions: %d' % len(bfs_solutions[0]))
-
-        # axisX  ==================> bfs_solutions[1]
-        # axisY  ==================> bfs_solutions[2]
-        # titleAxisX ==============> bfs_solutions[3]
-        # titleAxisY ==============> bfs_solutions[4]
-        # title ===================> bfs_solutions[5]
-        # numberIterations ========> bfs_solutions[6]
-
-        graph(bfs_solutions[1], bfs_solutions[2], bfs_solutions[3], bfs_solutions[4], bfs_solutions[5], bfs_solutions[6])
+        bfs = True
     elif choose == 2:
         agent = AStar(env.current_state, env.goal, env.action)
     elif choose == 3:
@@ -356,19 +363,28 @@ def main():
 
         agent = Genetic(state_list, 30)
 
-    solution = agent.search()
+    if(bfs != True):
+        solution = agent.search()
 
-    state = solution
-    state.show()
+        state = solution[0]
+        state.show()
 
-    result = ''
-    for column in range(size):
-        for row in range(size):
-            if state.map[row][column] == 1:
-                result += str(row + 1) + ' '
-                break
+        result = ''
+        for column in range(size):
+            for row in range(size):
+                if state.map[row][column] == 1:
+                    result += str(row + 1) + ' '
+                    break
+        print(result)
 
-    print(result)
+    # axisX  ==================> bfs_solutions[1]
+    # axisY  ==================> bfs_solutions[2]
+    # titleAxisX ==============> bfs_solutions[3]
+    # titleAxisY ==============> bfs_solutions[4]
+    # title ===================> bfs_solutions[5]
+    # numberIterations ========> bfs_solutions[6]
+
+    graph(solution[1], solution[2], solution[3], solution[4], solution[5], solution[6])
 
 if __name__ == '__main__':
     main()
