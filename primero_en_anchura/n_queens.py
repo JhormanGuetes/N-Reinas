@@ -1,4 +1,7 @@
 from queue import Queue
+from timeit import default_timer
+import matplotlib.pyplot as plt
+import pprint
 
 
 class NQueens:
@@ -10,21 +13,42 @@ class NQueens:
         if self.size < 1:
             return []
         solutions = []
+        tiempoDeEjecucion = []
         queue = Queue()
         queue.put([])
+        i = -1
         while not queue.empty():
+            i = i+1
+            inicio = default_timer()
             solution = queue.get()
             if self.conflict(solution):
+                final = default_timer()
+                tiempo = (final - inicio)*1000
+                tiempoDeEjecucion.append(tiempo)
                 continue
             row = len(solution)
             if row == self.size:
                 solutions.append(solution)
+                final = default_timer()
+                tiempo = (final - inicio)*1000
+                tiempoDeEjecucion.append(tiempo)
                 continue
             for col in range(self.size):
                 queen = (row, col)
                 queens = solution.copy()
                 queens.append(queen)
                 queue.put(queens)
+            final = default_timer()
+            tiempo = (final - inicio)*1000
+            tiempoDeEjecucion.append(tiempo)
+
+        #print(list(tiempoDeEjecucion))
+        plt.plot(list(range(len(tiempoDeEjecucion))), tiempoDeEjecucion)
+        plt.ylabel('Tiempo de Ejecución (ms)')
+        numeroDeIteraciones = "Iteraciones" + " (" + str(len(tiempoDeEjecucion)) + ")"
+        plt.xlabel(numeroDeIteraciones)
+        plt.title("BFS")
+        plt.show()
         return solutions
 
     def conflict(self, queens):
