@@ -2,6 +2,7 @@ import random
 from operator import mul    # or mul=lambda x,y:x*y
 from fractions import Fraction
 from functools import reduce
+import matplotlib.pyplot as plt
 
 print('Enter n: ')
 size = int(input())
@@ -167,6 +168,13 @@ def convert_state_to_string(my_state):
                 break
     return my_string
 
+def graph(axisX, axisY, titleAxisX, titleAxisY, title, numberIterations):
+    plt.plot(axisX, axisY)
+    titleX = titleAxisX + " (" + numberIterations + ")"
+    plt.xlabel(titleX)
+    plt.ylabel(titleAxisY)
+    plt.title(title)
+    plt.show()
 
 class QueenEnvironment:
     def __init__(self):
@@ -217,3 +225,4 @@ class QueenEnvironment:
 
         print(len(neighbor_states))
         return neighbor_states
+

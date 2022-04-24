@@ -1,7 +1,7 @@
 from queue import Queue
 from timeit import default_timer
 import matplotlib.pyplot as plt
-import pprint
+
 
 
 class NQueens:
@@ -43,13 +43,14 @@ class NQueens:
             tiempoDeEjecucion.append(tiempo)
 
         #print(list(tiempoDeEjecucion))
-        plt.plot(list(range(len(tiempoDeEjecucion))), tiempoDeEjecucion)
-        plt.ylabel('Tiempo de Ejecución (ms)')
-        numeroDeIteraciones = "Iteraciones" + " (" + str(len(tiempoDeEjecucion)) + ")"
-        plt.xlabel(numeroDeIteraciones)
-        plt.title("BFS")
-        plt.show()
-        return solutions
+        axisX = list(range(len(tiempoDeEjecucion)))
+        axisY = tiempoDeEjecucion
+        titleAxisX = "Iteraciones"
+        titleAxisY = "Tiempo de Ejecución (ms)"
+        title = "Breadth-First Search"
+        numberIterations = str(len(tiempoDeEjecucion))
+
+        return [solutions, axisX, axisY, titleAxisX, titleAxisY, title, numberIterations]
 
     def conflict(self, queens):
         for i in range(1, len(queens)):
@@ -62,9 +63,11 @@ class NQueens:
 
     def print(self, queens):
         for i in range(self.size):
-            print(' ---' * self.size)
+            print('[', end='')
             for j in range(self.size):
-                p = 'Q' if (i, j) in queens else ' '
-                print('| %s ' % p, end='')
-            print('|')
-        print(' ---' * self.size)
+                p = '1' if (i, j) in queens else '0'
+
+                if (j != self.size - 1): print(' %s,' % p, end='')
+                else: print(' %s' % p, end='')
+
+            print(']')

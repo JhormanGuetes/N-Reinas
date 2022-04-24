@@ -9,6 +9,7 @@ from QueenEnvironment import State
 from QueenEnvironment import nCk
 import QueenEnvironment
 import queue
+from QueenEnvironment import graph
 
 
 def convert_state_to_string(my_state):
@@ -331,10 +332,19 @@ def main():
     if choose == 1:
         n_queens = NQueens(size)
         bfs_solutions = n_queens.solve_bfs()
-        for i, solution in enumerate(bfs_solutions):
+        for i, solution in enumerate(bfs_solutions[0]):
             print('BFS Solution %d:' % (i + 1))
             n_queens.print(solution)
-        print('Total BFS solutions: %d' % len(bfs_solutions))
+        print('Total BFS solutions: %d' % len(bfs_solutions[0]))
+
+        # axisX  ==================> bfs_solutions[1]
+        # axisY  ==================> bfs_solutions[2]
+        # titleAxisX ==============> bfs_solutions[3]
+        # titleAxisY ==============> bfs_solutions[4]
+        # title ===================> bfs_solutions[5]
+        # numberIterations ========> bfs_solutions[6]
+
+        graph(bfs_solutions[1], bfs_solutions[2], bfs_solutions[3], bfs_solutions[4], bfs_solutions[5], bfs_solutions[6])
     elif choose == 2:
         agent = AStar(env.current_state, env.goal, env.action)
     elif choose == 3:
