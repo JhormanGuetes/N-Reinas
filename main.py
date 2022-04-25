@@ -1,8 +1,6 @@
 from QueenEnvironment import cal_heuristic
 from QueenEnvironment import size
-from itertools import combinations
 from primero_en_anchura.n_queens import NQueens
-from archivos import numeroDeColumnas
 import random
 import time
 from QueenEnvironment import State
@@ -23,53 +21,6 @@ def convert_state_to_string(my_state):
     return my_string
 
 
-class UCS:
-    def __init__(self, start_state, goal, action):
-        self.goal = goal
-        self.states = queue.PriorityQueue()
-        self.start_state = start_state
-        self.action = action
-        self.states.put((start_state.c, start_state))
-        self.visited_set = []
-
-    def is_goal(self, state):
-        if self.goal is not None:
-            return self.goal(state)
-
-    def is_visited(self, my_state):
-        if my_state in self.visited_set:
-            return True
-        return False
-
-    def push_to_queue(self, new_states):
-        for state in new_states:
-            if not self.is_visited(state):
-                self.states.put((state.c, state))
-
-    def search(self):
-        (value, best_state) = self.states.get()
-        start = time.process_time()
-        count = 1
-        while not self.is_goal(best_state):
-            neighbor_states = self.action(best_state)
-            self.push_to_queue(neighbor_states)
-            if not self.states.empty():
-                (value, best_state) = self.states.get()
-                print('---------------------')
-                print('Time %s' % count)
-                print('C = %s' % best_state.c)
-                print('Length of queue = %s' % self.states.qsize())
-                print(convert_state_to_string(best_state))
-                self.visited_set.append(convert_state_to_string(best_state))
-                count += 1
-            else:
-                return None
-
-        duration = time.process_time() - start
-        print(duration)
-        return best_state
-
-
 class AStar:
     def __init__(self, start_state, goal, action):
         self.goal = goal
@@ -88,9 +39,10 @@ class AStar:
 
     def search(self):
         (value, best_state) = self.states.get()
+        suma_tiempo = 0
         start = time.process_time()
         count = 1
-        tiempoDeEjecucion = []
+        tiempo_de_ejecucion = []
         while not self.is_goal(best_state):
             inicio = default_timer()
             neighbor_states = self.action(best_state)
@@ -108,18 +60,19 @@ class AStar:
 
             final = default_timer()
             tiempo = (final - inicio) * 1000
-            tiempoDeEjecucion.append(tiempo)
+            suma_tiempo = suma_tiempo + tiempo
+            tiempo_de_ejecucion.append(suma_tiempo)
 
-        axisX = list(range(len(tiempoDeEjecucion)))
-        axisY = tiempoDeEjecucion
-        titleAxisX = "Iteraciones"
-        titleAxisY = "Tiempo de Ejecución (ms)"
+        axis_x = list(range(len(tiempo_de_ejecucion)))
+        axis_y = tiempo_de_ejecucion
+        title_axis_x = "Iteraciones"
+        title_axis_y = "Tiempo de Ejecución (ms)"
         title = "A*"
-        numberIterations = str(len(tiempoDeEjecucion))
+        number_iterations = str(len(tiempo_de_ejecucion))
 
         duration = time.process_time() - start
         print(duration)
-        return [best_state, axisX, axisY, titleAxisX, titleAxisY, title, numberIterations]
+        return [best_state, axis_x, axis_y, title_axis_x, title_axis_y, title, number_iterations]
 
 
 def get_neighbor_highest(states):
@@ -132,49 +85,6 @@ def get_neighbor_highest(states):
             state = other
 
     return state
-
-
-class Hill_climbing:
-    def __init__(self, env):
-        self.current_state = env.current_state
-        self.current_state.h = cal_heuristic(self.current_state)
-        self.goal = env.goal
-        self.action = env.action
-        self.env = env
-
-    def search(self):
-        start = time.process_time()
-        count = 1
-        while True:
-            neighbor_states = self.action(self.current_state)
-
-            if len(neighbor_states) < 1:
-                print('Restart len 0')
-                self.current_state = self.env.random_start_state()
-                neighbor_states = self.action(self.current_state)
-
-            highest_state = get_neighbor_highest(neighbor_states)
-            highest_state.h = cal_heuristic(highest_state)
-            self.current_state.h = cal_heuristic(self.current_state)
-            if highest_state.h > self.current_state.h or self.goal(self.current_state):
-                if self.current_state.h == 0:
-                    self.current_state.show()
-                    cal_heuristic(self.current_state)
-                if self.goal(self.current_state):
-                    duration = time.process_time() - start
-                    print(duration)
-                    return self.current_state
-                else:
-                    print('Restart stuck')
-                    self.current_state = self.env.random_start_state()
-            else:
-                self.current_state = highest_state
-                self.current_state.h = cal_heuristic(self.current_state)
-
-            print('---------------------')
-            print('Time %s' % count)
-            print('H = %s' % self.current_state.h)
-            count += 1
 
 
 def random_selection(population):
@@ -268,7 +178,8 @@ class Genetic:
         return False
 
     def search(self):
-        tiempoDeEjecucion = []
+        tiempo_de_ejecucion = []
+        suma_tiempo = 0
         count = 1
         print(nCk(size, 2))
         start = time.process_time()
@@ -301,21 +212,22 @@ class Genetic:
             count += 1
             final = default_timer()
             tiempo = (final - inicio) * 1000
-            tiempoDeEjecucion.append(tiempo)
+            suma_tiempo = suma_tiempo + tiempo
+            tiempo_de_ejecucion.append(suma_tiempo)
 
         duration = time.process_time() - start
         print(duration)
         for state in self.states:
             if cal_heuristic(state) == 0:
 
-                axisX = list(range(len(tiempoDeEjecucion)))
-                axisY = tiempoDeEjecucion
-                titleAxisX = "Iteraciones"
-                titleAxisY = "Tiempo de Ejecución (ms)"
+                axis_x = list(range(len(tiempo_de_ejecucion)))
+                axis_y = tiempo_de_ejecucion
+                title_axis_x = "Iteraciones"
+                title_axis_y = "Tiempo de Ejecución (ms)"
                 title = "Genetic Algorithm"
-                numberIterations = str(len(tiempoDeEjecucion))
+                number_iterations = str(len(tiempo_de_ejecucion))
 
-                return [state, axisX, axisY, titleAxisX, titleAxisY, title, numberIterations]
+                return [state, axis_x, axis_y, title_axis_x, title_axis_y, title, number_iterations]
 
         return None
 
@@ -345,6 +257,7 @@ def main():
     bfs = False
     env = QueenEnvironment.QueenEnvironment()
     solution = []
+    agent = []
     env.current_state = env.random_start_state()
     env.current_state.show()
 
@@ -369,7 +282,7 @@ def main():
     elif choose == 2:
         agent = AStar(env.current_state, env.goal, env.action)
     elif choose == 3:
-        agent = Hill_climbing(env)
+        print("no se ha agregado nada")
     elif choose == 4:
         state_list = []
         for i in range(20):

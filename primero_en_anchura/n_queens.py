@@ -13,7 +13,8 @@ class NQueens:
         if self.size < 1:
             return []
         solutions = []
-        tiempoDeEjecucion = []
+        tiempo_de_ejecucion = []
+        suma_tiempo = 0
         queue = Queue()
         queue.put([])
         i = -1
@@ -24,14 +25,16 @@ class NQueens:
             if self.conflict(solution):
                 final = default_timer()
                 tiempo = (final - inicio)*1000
-                tiempoDeEjecucion.append(tiempo)
+                suma_tiempo = suma_tiempo + tiempo
+                tiempo_de_ejecucion.append(suma_tiempo)
                 continue
             row = len(solution)
             if row == self.size:
                 solutions.append(solution)
                 final = default_timer()
                 tiempo = (final - inicio)*1000
-                tiempoDeEjecucion.append(tiempo)
+                suma_tiempo = suma_tiempo + tiempo
+                tiempo_de_ejecucion.append(suma_tiempo)
                 continue
             for col in range(self.size):
                 queen = (row, col)
@@ -40,17 +43,18 @@ class NQueens:
                 queue.put(queens)
             final = default_timer()
             tiempo = (final - inicio)*1000
-            tiempoDeEjecucion.append(tiempo)
+            suma_tiempo = suma_tiempo + tiempo
+            tiempo_de_ejecucion.append(suma_tiempo)
 
-        #print(list(tiempoDeEjecucion))
-        axisX = list(range(len(tiempoDeEjecucion)))
-        axisY = tiempoDeEjecucion
-        titleAxisX = "Iteraciones"
-        titleAxisY = "Tiempo de Ejecución (ms)"
+        #print(list(tiempo_de_ejecucion))
+        axis_x = list(range(len(tiempo_de_ejecucion)))
+        axis_y = tiempo_de_ejecucion
+        title_axis_x = "Iteraciones"
+        title_axis_y = "Tiempo de Ejecución (ms)"
         title = "Breadth-First Search"
-        numberIterations = str(len(tiempoDeEjecucion))
+        number_iterations = str(len(tiempo_de_ejecucion))
 
-        return [solutions, axisX, axisY, titleAxisX, titleAxisY, title, numberIterations]
+        return [solutions, axis_x, axis_y, title_axis_x, title_axis_y, title, number_iterations]
 
     def conflict(self, queens):
         for i in range(1, len(queens)):
