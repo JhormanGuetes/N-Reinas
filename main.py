@@ -105,6 +105,7 @@ class AStar:
                 count += 1
             else:
                 return None
+
             final = default_timer()
             tiempo = (final - inicio) * 1000
             tiempoDeEjecucion.append(tiempo)
@@ -267,11 +268,13 @@ class Genetic:
         return False
 
     def search(self):
+        tiempoDeEjecucion = []
         count = 1
         print(nCk(size, 2))
         start = time.process_time()
 
         while not self.is_best_individual():
+            inicio = default_timer()
             fitness = ''
             new_states = []
             avg = 0
@@ -296,12 +299,23 @@ class Genetic:
             print(fitness)
             self.states = list_childs
             count += 1
+            final = default_timer()
+            tiempo = (final - inicio) * 1000
+            tiempoDeEjecucion.append(tiempo)
 
         duration = time.process_time() - start
         print(duration)
         for state in self.states:
             if cal_heuristic(state) == 0:
-                return state
+
+                axisX = list(range(len(tiempoDeEjecucion)))
+                axisY = tiempoDeEjecucion
+                titleAxisX = "Iteraciones"
+                titleAxisY = "Tiempo de Ejecución (ms)"
+                title = "Genetic Algorithm"
+                numberIterations = str(len(tiempoDeEjecucion))
+
+                return [state, axisX, axisY, titleAxisX, titleAxisY, title, numberIterations]
 
         return None
 

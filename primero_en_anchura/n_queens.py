@@ -32,7 +32,6 @@ class NQueens:
                 final = default_timer()
                 tiempo = (final - inicio)*1000
                 tiempoDeEjecucion.append(tiempo)
-                print(solutions, " solitions")
                 continue
             for col in range(self.size):
                 queen = (row, col)
@@ -50,7 +49,7 @@ class NQueens:
         titleAxisY = "Tiempo de Ejecución (ms)"
         title = "Breadth-First Search"
         numberIterations = str(len(tiempoDeEjecucion))
-        print("salí")
+
         return [solutions, axisX, axisY, titleAxisX, titleAxisY, title, numberIterations]
 
     def conflict(self, queens):
