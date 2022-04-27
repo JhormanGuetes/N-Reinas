@@ -10,6 +10,7 @@ import QueenEnvironment
 import queue
 from QueenEnvironment import graph
 from timeit import default_timer
+import numpy as np
 
 
 def convert_state_to_string(my_state):
@@ -296,6 +297,167 @@ class Genetic:
 
         return None
 
+"""
+A class for defining an Ant Colony Optimizer for TSP-solving.
+The c'tor receives the following arguments:
+    Graph: TSP graph 
+    Nant: Colony size
+    Niter: maximal number of iterations to be run
+    rho: evaporation constant
+    alpha: pheromones' exponential weight in the nextMove calculation
+    beta: heuristic information's (\eta) exponential weight in the nextMove calculation
+    seed: random number generator's seed
+"""
+
+
+class ACO(object):
+    def __init__(self, dim, Nant, Niter, rho, alpha=1, beta=1, seed=None):
+        self.dim = dim
+        self.Nant = Nant
+        self.Niter = Niter
+        self.rho = rho
+        self.alpha = alpha
+        self.beta = beta
+        self.pheromone = np.ones((dim, dim)) / dim
+        self.local_state = np.random.RandomState(seed)
+        """
+        This method invokes the ACO search over the TSP graph.
+        It returns the best tour located during the search.
+        Importantly, 'all_paths' is a list of pairs, each contains a path and its associated length.
+        Notably, every individual 'path' is a list of edges, each represented by a pair of nodes.
+        """
+
+    def run(self):
+        # Book-keeping: best tour ever
+        best_placement = None
+        best_path = ("TBD", np.inf)
+        for i in range(self.Niter):
+            contradictions = np.zeros((self.Nant, self.dim))
+            all_paths = self.constructColonyPaths(contradictions)
+            self.depositPheronomes(all_paths, contradictions)
+            best_placement = min(all_paths, key=lambda x: x[1])
+            print(i + 1, ": ", best_placement[1])
+            if best_placement[1] < best_path[1]:
+                best_path = best_placement
+            self.pheromone *= self.rho  # evaporation
+
+        return best_path
+        """
+        This method deposits pheromones on the edges.
+        Importantly, unlike the lecture's version, this ACO selects only 1/4 of the top tours - and updates only their edges, 
+        in a slightly different manner than presented in the lecture.
+        """
+
+    def depositPheronomes(self, all_paths, contradictions):
+        # sorted_paths = sorted(all_paths, key=lambda x: x[1])
+        # Nsel = int(self.Nant/4) # Proportion of updated paths
+        currPath = 0
+        # for path, fitVal in sorted_paths[:Nsel]:
+        for path, fitVal in all_paths:
+            for move in range(self.dim):
+                self.pheromone[path[move]][move] += 1.0 / (contradictions[currPath][move] + 1) ** (self.dim / 2)
+            currPath += 1
+
+        """
+        This method generates paths for the entire colony for a concrete iteration.
+        The input, 'path', is a list of edges, each represented by a pair of nodes.
+        Therefore, each 'arc' is a pair of nodes, and thus Graph[arc] is well-defined as the edges' length.
+        """
+
+    def evalTour(self, path, contradictions, solution):
+        res = 0
+        for i in range(len(path)):
+            if contradictions[i] != 0:
+                res += 1
+        if res == 0:
+            for i in range(self.dim):
+                for j in range(self.dim):
+                    if path[i] == j:
+                        print(1, end='')
+                    else:
+                        print(0, end='')
+                    print(" ", end='')
+                print()
+
+            graph(solution[0], solution[1], solution[2], solution[3], solution[4], solution[5])
+            exit(0)
+        return res
+        #
+        """
+        This method generates a single Hamiltonian tour per an ant, starting from node 'start'
+        The output, 'path', is a list of edges, each represented by a pair of nodes.
+        """
+
+    def constructSolution(self, ant, contradictions):
+        path = []
+        tiempo_de_ejecucion = []
+        suma_tiempo = 0
+        for i in range(self.dim):
+            inicio = default_timer()
+            path = self.nextMove(self.pheromone[:][i], path, ant, contradictions)
+
+            final = default_timer()
+            tiempo = (final - inicio) * 1000
+            suma_tiempo = suma_tiempo + tiempo
+            tiempo_de_ejecucion.append(suma_tiempo)
+
+        axis_x = list(range(len(tiempo_de_ejecucion)))
+        axis_y = tiempo_de_ejecucion
+        title_axis_x = "Iteraciones"
+        title_axis_y = "Tiempo de Ejecución (ms)"
+        title = "Breadth-First Search"
+        number_iterations = str(len(tiempo_de_ejecucion))
+        solution = [axis_x, axis_y, title_axis_x, title_axis_y, title, number_iterations]
+        return path, self.evalTour(path, contradictions[ant], solution)
+        """
+        This method generates 'Nant' paths, for the entire colony, representing a single iteration.
+        """
+
+    def constructColonyPaths(self, contradictions):
+        all_paths = []
+        for i in range(self.Nant):
+            path, value = self.constructSolution(i, contradictions)
+            # constructing pairs: first is the tour, second is its length
+            all_paths.append((path, value))
+        return all_paths
+
+        """
+        This method probabilistically calculates the next move (node) given a neighboring 
+        information per a single ant at a specified node.
+        Importantly, 'pheromone' is a specific row out of the original matrix, representing the neighbors of the current node.
+        Similarly, 'dist' is the row out of the original graph, associated with the neighbors of the current node.
+        'visited' is a set of nodes - whose probability weights are constructed as zeros, to eliminate revisits.
+        The random generation relies on norm_row, as a vector of probabilities, using the numpy function 'choice'
+        """
+
+    def nextMove(self, pheromone, path, ant, contradictions):
+        colContr = self.getContradictions(
+            path)  # for column k, return pair(num contradictions, vector of with whom contradiction)
+        row = pheromone ** self.alpha * ((1.0 / (colContr + 1)) ** self.beta)
+        norm_row = row / row.sum()
+        dims = range(self.dim)
+        move = self.local_state.choice(dims, 1, p=norm_row)[0]
+        # changes to path and self.contradictions
+        path.append(move)
+        if colContr[move] != 0:
+            contradictions[ant][len(path) - 1] += 1
+        for j in range((len(path) - 1)):  # j = column of path[j], path[j] = row of this element
+            if path[j] == move:
+                contradictions[ant][j] += 1
+            if path[j] + j == len(path) - 1 + move:
+                contradictions[ant][j] += 1
+            if path[j] - j == move - (len(path) - 1):
+                contradictions[ant][j] += 1
+        return path
+
+    def getContradictions(self, path):
+        colContr = np.zeros(self.dim)
+        curCol = len(path)  # current column
+        for i in range(self.dim):  # row in curCol
+            for j in range(len(path)):  # j = column of path[j], path[j] = row of this element
+                if path[j] == i or curCol - i == j - path[j] or curCol + i == j + path[j]:
+                    colContr[i] += 1
+        return colContr
 
 class NQueensProblem:
     """The problem of placing N queens on an NxN board with none attacking each other.
@@ -425,6 +587,24 @@ def main():
             state_list.append(env.random_start_state())
 
         agent = Genetic(state_list, 30)
+    elif choose == 5:
+        Niter = 500
+        Nant = 200
+        n_queens = size
+        ant_colony = ACO(n_queens, Nant, Niter, rho=0.95, alpha=1, beta=10)
+        solution = ant_colony.run()
+        #print("------------------------------------------------")
+        #print(solution[1])
+        #shortest_path = solution[0]
+        #for i in range(n_queens):
+        #    for j in range(n_queens):
+        #        if shortest_path[0][i] == j:
+        #            print(1, end='')
+        #        else:
+        #            print(0, end='')
+        #        print(" ", end='')
+        #    print()
+        #print("shotest_path: {}".format(shortest_path))
 
     if(bfs_or_sa != True):
         solution = agent.search()
